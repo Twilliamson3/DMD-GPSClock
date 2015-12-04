@@ -34,35 +34,29 @@ boolean clockinsync = false; // Has SoftRTC been sync'd lately"?
 
 //********DMDisplay *************//
 #include <SPI.h>        //SPI.h must be included as DMD is written by SPI (the IDE complains otherwise)
-#include <DMD.h>        //https://github.com/freetronics/DMD
-#include <TimerOne.h>   //http://playground.arduino.cc/Code/Timer1
+#include <DMD2.h>        //https://github.com/freetronics/DMD
 #include "SystemFont5x7.h"
 #include "Arial_black_16.h"
 
 //Fire up the DMD library as dmd
 #define DISPLAYS_ACROSS 1
 #define DISPLAYS_DOWN 1
-DMD dmd(DISPLAYS_ACROSS, DISPLAYS_DOWN);
-/*--------------------------------------------------------------------------------------
-  Interrupt handler for Timer1 (TimerOne) driven DMD refresh scanning, this gets
-  called at the period set in Timer1.initialize();
---------------------------------------------------------------------------------------*/
-void ScanDMD()
-{ 
-  dmd.scanDisplayBySPI();
-}
+SoftDMD dmd(1,1,3,2,4,7,6,8);  // DMD controls the entire display (largura,altura)
+//SoftDMD(byte panelsWide, byte panelsHigh, byte pin_noe, byte pin_a, byte pin_b, byte pin_sck, byte pin_clk, byte pin_r_data);
+DMD_TextBox box(dmd, 0, 2);  // "box" provides a text box to automatically write to/scroll the display
 //******END CONFIGS*****//
 
 void setup()
 {
   Serial.begin(115200);
-  //initialize TimerOne's interrupt/CPU usage used to scan and refresh the display
-  Timer1.initialize( 5000 );           //period in microseconds to call ScanDMD. Anything longer than 5000 (5ms) and you can see flicker.
-  Timer1.attachInterrupt( ScanDMD );   //attach the Timer1 interrupt to ScanDMD which goes to dmd.scanDisplayBySPI()
+  dmd.setBrightness(255);
+  dmd.selectFont(Arial_Black_16);
+  dmd.begin();
+  /* TIP: If you want a longer string here than fits on your display, just define the display DISPLAYS_WIDE value to be wider than the
+    number of displays you actually have.
+   */
+  dmd.drawString(0, 0, F("Hello World!"));
 
-  //clear/init the DMD pixels held in RAM
-  dmd.clearScreen( true );   //true is normal (all pixels off), false is negative (all pixels on)
-   
   while (!Serial) ; // Needed for Leonardo only
   SerialGPS.begin(9600);
   Serial.println("Waiting for GPS time ... ");
@@ -88,13 +82,10 @@ void loop()
     }
   }
   //Print to the DMD
-   dmd.clearScreen( true );
+   dmd.clearScreen();
    dmd.selectFont(Arial_Black_16);
-   dmd.drawChar(  0,  3, '2', GRAPHICS_NORMAL );
-   dmd.drawChar(  7,  3, '3', GRAPHICS_NORMAL );
-   dmd.drawChar( 17,  3, '4', GRAPHICS_NORMAL );
-   dmd.drawChar( 25,  3, '5', GRAPHICS_NORMAL );
-   dmd.drawChar( 15,  3, ':', GRAPHICS_OR     );   // clock colon overlay on
+   box.print('Hello');
+
   //Output to the Serialport 
   if (timeStatus()!= timeNotSet) {
     if (now() != prevDisplay) { //update the display only if the time has changed
