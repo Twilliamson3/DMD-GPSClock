@@ -1,12 +1,7 @@
 /*
- * TimeGPS.pde
- * example code illustrating time synced from a GPS
- * PLUS
- * DMD Code for displaying clock
+ * DMD Code for displaying clock based on a Software RTC and GPS Sync Source
+ * Board : MEGA (Needed for RAM and Ports)
  * OBJECTIVE: GPS Sync'd Clock 
- * |--------|--------|
- * |1 2: 4 5 : 59MMDD
- * |--------|--------|
  */
 
 //********Clock and GPS **********//
@@ -90,9 +85,7 @@ void loop()
       
     }
   }
-  //Print to the DMD
-   //dmd.drawString(0,0,"Hello");
-
+  
   //Output to the Serialport 
   if (timeStatus()!= timeNotSet) {
     if (now() != prevDisplay) { //update the display only if the time has changed
@@ -103,37 +96,41 @@ void loop()
 }
 
 void digitalClockDisplay(){
+  // digital clock display of the time to the serial Port
+    Serial.print(hr12to24(hour()));
+    printDigits(minute());
+    printDigits(second());
+    if(appisPM == true){Serial.println(" PM"); AP = "p";}else{Serial.println(" AM");AP = "a";} //this Prints AM or PM to the Serial port and also Sets the String AP up for the Display
 
+  // Display Date to the serial port
+      Serial.print(" ");
+      Serial.print(day());
+      Serial.print(" ");
+      Serial.print(month());
+      Serial.print(" ");
+      Serial.print(year()); 
+      Serial.println();     
+  //Print Sats
+    
+    
+  //Setup to Read Time, Convert to local int, process int into time (1 should print 01) (13 hours should print 12 hours)  
+       int min =  minute();
+      if ( min < 10){Minutes = "0" + String(min);}else{Minutes = String(min);}    
+      
+      int seconds =  second();
+      if ( seconds < 10){Sec = "0" + String(seconds);}else{Sec = String(seconds);} 
+      
+      int hrs =  hour();
+      if ( hrs < 12) { if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);}}     //This converts hrs to 12 hour time always 2 digits
+          else 
+          {hrs = hrs - 12; if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);} ;} 
 
-  //Serial.print(cTIME);
-  // digital clock display of the time
-  //Serial.print(hour());
-  Serial.print(hr12to24(hour()));
-  printDigits(minute());
-  printDigits(second());
-  
-  if(appisPM == true){Serial.println(" PM"); AP = "p";}else{Serial.println(" AM");AP = "a";}
-  
-  
-int min =  minute();
-if ( min < 10){Minutes = "0" + String(min);}else{Minutes = String(min);}    
-
-int seconds =  second();
-if ( seconds < 10){Sec = "0" + String(seconds);}else{Sec = String(seconds);} 
-
-int hrs =  hour();
-if ( hrs < 12) { if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);}} else {hrs = hrs - 12; if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);} ;} 
-
-String cTIME= Hours + Col + Minutes + Col + Sec + AP;
-Serial.println(cTIME);
-//dmd.clearScreen();
-//dmd.drawFilledBox(54,0,64,16);
-dmd.drawString(6,0,cTIME);
-//Draw a line for secs
-dmd.drawFilledBox(0,6,1,8);
-dmd.drawFilledBox(62,6,63,8);
-if (seconds == 0){dmd.drawLine(2,7,62,7,GRAPHICS_OFF);}else{dmd.drawLine(0,7,(seconds+1),7);}
-//end of draw a line
+      String cTIME= Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time. 
+      //Serial.println(cTIME);//Debug the Time String if not wotking 
+      
+      dmd.drawString(6,0,cTIME); // Display the Time on the LED Panel
+      
+      secTicker(seconds);
 
   Serial.print(" ");
   Serial.print(day());
@@ -161,3 +158,15 @@ int hr12to24 (int hour24){
     } else {appisPM = false;}
     return hour24; 
 }
+
+void secTicker (int sec){
+  //This Draws a line across the screen that builds with each second, it also had blocks at each end for better effect. This is designed for two panels in horizontal arrangment
+  //Draw a the boxes
+    dmd.drawFilledBox(0,6,1,8);
+    dmd.drawFilledBox(62,6,63,8);
+  // Psudo: Erase the line if sec = 0 ELSE the line length should equal sec +1  
+    if (sec == 0){dmd.drawLine(2,7,62,7,GRAPHICS_OFF);}else{dmd.drawLine(0,7,(sec+1),7);}
+    //end of draw a line
+}
+
+
