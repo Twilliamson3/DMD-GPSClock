@@ -31,35 +31,44 @@ const int offset = -5;  // Eastern Standard Time (USA)
 time_t prevDisplay = 0; // when the digital clock was displayed
 boolean appisPM = false;
 boolean clockinsync = false; // Has SoftRTC been sync'd lately"?
+String Hours ;
+String Minutes ;
+String Sec ;
+String Col = ":";
+String AP;
+String Mo;
+String Date;
+String Yr;
 
 //********DMDisplay *************//
 #include <SPI.h>        //SPI.h must be included as DMD is written by SPI (the IDE complains otherwise)
 #include <DMD2.h>        //https://github.com/freetronics/DMD
 #include "SystemFont5x7.h"
 #include "Arial_black_16.h"
+#include <fonts/Arial14.h>
+#include <fonts/Droid_Sans_16.h>
+
 
 //Fire up the DMD library as dmd
-#define DISPLAYS_ACROSS 1
+#define DISPLAYS_ACROSS 2
 #define DISPLAYS_DOWN 1
-SoftDMD dmd(1,1,3,2,4,7,6,8);  // DMD controls the entire display (largura,altura)
-//SoftDMD(byte panelsWide, byte panelsHigh, byte pin_noe, byte pin_a, byte pin_b, byte pin_sck, byte pin_clk, byte pin_r_data);
-DMD_TextBox box(dmd, 0, 2);  // "box" provides a text box to automatically write to/scroll the display
+SoftDMD dmd(2,1);  // DMD controls the entire display
 //******END CONFIGS*****//
 
 void setup()
 {
   Serial.begin(115200);
-  dmd.setBrightness(255);
-  dmd.selectFont(Arial_Black_16);
+  dmd.setBrightness(30);
+  //dmd.selectFont(Arial_Black_16);
+  //dmd.selectFont(Arial14);
+  //dmd.selectFont(Droid_Sans_16);
+  dmd.selectFont(SystemFont5x7);
   dmd.begin();
-  /* TIP: If you want a longer string here than fits on your display, just define the display DISPLAYS_WIDE value to be wider than the
-    number of displays you actually have.
-   */
-  dmd.drawString(0, 0, F("Hello World!"));
 
   while (!Serial) ; // Needed for Leonardo only
   SerialGPS.begin(9600);
   Serial.println("Waiting for GPS time ... ");
+  dmd.drawString(8,0,"GPS Lost");
 }
 
 void loop()
@@ -82,9 +91,7 @@ void loop()
     }
   }
   //Print to the DMD
-   dmd.clearScreen();
-   dmd.selectFont(Arial_Black_16);
-   box.print('Hello');
+   //dmd.drawString(0,0,"Hello");
 
   //Output to the Serialport 
   if (timeStatus()!= timeNotSet) {
@@ -96,21 +103,45 @@ void loop()
 }
 
 void digitalClockDisplay(){
+
+
+  //Serial.print(cTIME);
   // digital clock display of the time
   //Serial.print(hour());
   Serial.print(hr12to24(hour()));
   printDigits(minute());
   printDigits(second());
-  if(appisPM == true){Serial.println(" PM");}else{Serial.println(" AM");}
   
-    
-//  Serial.print(" ");
-//  Serial.print(day());
-//  Serial.print(" ");
-//  Serial.print(month());
-//  Serial.print(" ");
-//  Serial.print(year()); 
-//  Serial.println(); 
+  if(appisPM == true){Serial.println(" PM"); AP = "p";}else{Serial.println(" AM");AP = "a";}
+  
+  
+int min =  minute();
+if ( min < 10){Minutes = "0" + String(min);}else{Minutes = String(min);}    
+
+int seconds =  second();
+if ( seconds < 10){Sec = "0" + String(seconds);}else{Sec = String(seconds);} 
+
+int hrs =  hour();
+if ( hrs < 12) { if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);}} else {hrs = hrs - 12; if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);} ;} 
+
+String cTIME= Hours + Col + Minutes + Col + Sec + AP;
+Serial.println(cTIME);
+//dmd.clearScreen();
+//dmd.drawFilledBox(54,0,64,16);
+dmd.drawString(6,0,cTIME);
+//Draw a line for secs
+dmd.drawFilledBox(0,6,1,8);
+dmd.drawFilledBox(62,6,63,8);
+if (seconds == 0){dmd.drawLine(2,7,62,7,GRAPHICS_OFF);}else{dmd.drawLine(0,7,(seconds+1),7);}
+//end of draw a line
+
+  Serial.print(" ");
+  Serial.print(day());
+  Serial.print(" ");
+  Serial.print(month());
+  Serial.print(" ");
+  Serial.print(year()); 
+  Serial.println(); 
 }
 
 void printDigits(int digits) {
@@ -121,6 +152,7 @@ void printDigits(int digits) {
   Serial.print(digits);
 }
 
+
 int hr12to24 (int hour24){
   //Serial.print("hour24: ");Serial.println(hour24);
   if(hour24 > 12){
@@ -129,5 +161,3 @@ int hr12to24 (int hour24){
     } else {appisPM = false;}
     return hour24; 
 }
-
-
