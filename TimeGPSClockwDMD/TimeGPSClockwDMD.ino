@@ -1,7 +1,7 @@
 /*
  * DMD Code for displaying clock based on a Software RTC and GPS Sync Source
  * Board : MEGA (Needed for RAM and Ports)
- * OBJECTIVE: GPS Sync'd Clock 
+ * OBJECTIVE: GPS Sync'd Clock
  */
 
 //********Clock and GPS **********//
@@ -10,7 +10,7 @@
 //#include <SoftwareSerial.h>  // TinyGPS and SoftwareSerial libraries are the work of Mikal Hart
 
 //SoftwareSerial SerialGPS = SoftwareSerial(10, 11);  // receive on pin 10
-TinyGPS gps; 
+TinyGPS gps;
 
 // To use a hardware serial port, which is far more efficient than
 // SoftwareSerial, uncomment this line and remove SoftwareSerial
@@ -48,7 +48,7 @@ int seconds;
 //Fire up the DMD library as dmd
 #define DISPLAYS_ACROSS 2
 #define DISPLAYS_DOWN 1
-SoftDMD dmd(2,1);  // DMD controls the entire display
+SoftDMD dmd(2, 1); // DMD controls the entire display
 //******END CONFIGS*****//
 
 void setup()
@@ -64,7 +64,7 @@ void setup()
   while (!Serial) ; // Needed for Leonardo only
   SerialGPS.begin(9600);
   Serial.println("Waiting for GPS time ... ");
-  dmd.drawString(8,0,"GPS Lost");
+  dmd.drawString(8, 0, "GPS Lost");
 
 }
 
@@ -84,84 +84,104 @@ void loop()
         Serial.println("Sync'd");
         clockinsync = true;
       }
-      
+
     }
   }
-  
-  //Output to the Serialport 
-  if (timeStatus()!= timeNotSet) {
+
+  //Output to the Serialport
+  if (timeStatus() != timeNotSet) {
     if (now() != prevDisplay) { //update the display only if the time has changed
       prevDisplay = now();
-      digitalClockDisplay(); 
+      digitalClockDisplay();
     }
   }
 }
 
-void digitalClockDisplay(){
+void digitalClockDisplay() {
   // digital clock display of the time to the serial Port
-    Serial.print(hr12to24(hour()));
-    printDigits(minute());
-    printDigits(second());
-    if(appisPM == true){Serial.println(" PM"); AP = "p";}else{Serial.println(" AM");AP = "a";} //this Prints AM or PM to the Serial port and also Sets the String AP up for the Display
+  Serial.print(hr12to24(hour()));
+  printDigits(minute());
+  printDigits(second());
+  if (appisPM == true) {
+    Serial.println(" PM");  //this Prints AM or PM to the Serial port and also Sets the String AP up for the Display
+    AP = "p";
+  } else {
+    Serial.println(" AM");
+    AP = "a";
+  }
 
   // Display Date to the serial port
-      Serial.print(weekday()); //?Sunday=1?
-      Serial.print("   ");
-      Serial.print(month());
-      Serial.print("/");
-      Serial.print(day());      
-      Serial.print("/");
-      Serial.print(year()); 
-      Serial.println(); 
-      
-        
-      
-  
-    
-  //Setup to Read Time, Convert to local int, process int into time (1 should print 01) (13 hours should print 12 hours)  
-      int min =  minute();
-      if ( min < 10){Minutes = "0" + String(min);}else{Minutes = String(min);}    
-      
-      int seconds =  second();
-      if ( seconds < 10){Sec = "0" + String(seconds);}else{Sec = String(seconds);} 
-      
-      if ( hrs < 12) { 
-              if( hrs < 10 ) {
-                  Hours = "0" + String(hrs);
-                } else {
-                  Hours = String(hrs);}
-              }     //This converts AM hrs to 12 hour time always 2 digits
-              
-      if (hrs == 12) {Hours = String(12);} // Its 12 Noon
-      
-      if (hrs > 12) {
-        hrs = hrs - 12; 
-              if( hrs < 10 ) {
-                  Hours = "0" + String(hrs);
-                }else{
-                  Hours = String(hrs);} 
-                    ;}
+  Serial.print(weekday()); //?Sunday=1?
+  Serial.print("   ");
+  Serial.print(month());
+  Serial.print("/");
+  Serial.print(day());
+  Serial.print("/");
+  Serial.print(year());
+  Serial.println();
 
-      String cTIME= Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time. 
-      //Serial.println(cTIME);//Debug the Time String if not wotking 
-      gpsSatsSignal(seconds,gps.satellites());// Display GPS Signal Bars
-      dmd.drawString(6,0,cTIME); // Display the Time on the LED Panel
-      secTicker(seconds); //Display Second Ticker
+
+
+
+
+  //Setup to Read Time, Convert to local int, process int into time (1 should print 01) (13 hours should print 12 hours)
+  int min =  minute();
+  if ( min < 10) {
+    Minutes = "0" + String(min);
+  } else {
+    Minutes = String(min);
+  }
+
+  int seconds =  second();
+  if ( seconds < 10) {
+    Sec = "0" + String(seconds);
+  } else {
+    Sec = String(seconds);
+  }
+
+  int hrs = hours();
+  if ( hrs < 12) {
+    if ( hrs < 10 ) {
+      Hours = "0" + String(hrs);
+    } else {
+      Hours = String(hrs);
+    }
+  }     //This converts AM hrs to 12 hour time always 2 digits
+
+  if (hrs == 12) {
+    Hours = String(12); // Its 12 Noon
+  }
+
+  if (hrs > 12) {
+    hrs = hrs - 12;
+    if ( hrs < 10 ) {
+      Hours = "0" + String(hrs);
+    } else {
+      Hours = String(hrs);
+    }
+    ;
+  }
+
+  String cTIME = Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time.
+  //Serial.println(cTIME);//Debug the Time String if not wotking
+  gpsSatsSignal(seconds, gps.satellites()); // Display GPS Signal Bars
+  dmd.drawString(6, 0, cTIME); // Display the Time on the LED Panel
+  secTicker(seconds); //Display Second Ticker
 
   Serial.print(" ");
   Serial.print(day());
   Serial.print(" ");
   Serial.print(month());
   Serial.print(" ");
-  Serial.print(year()); 
-  Serial.println(); 
-  
+  Serial.print(year());
+  Serial.println();
+
 }
 
 void printDigits(int digits) {
   // utility function for digital clock display: prints preceding colon and leading 0
   Serial.print(":");
-  if(digits < 10)
+  if (digits < 10)
     Serial.print('0');
   Serial.print(digits);
 }
@@ -173,59 +193,63 @@ void printDigits(int digits) {
 //    hour24 = hour24 - 12;
 //    appisPM = true;
 //    } else {appisPM = false;}
-//    return hour24; 
+//    return hour24;
 //}
 
 //new Method, Needs Testing
-int hr12to24(int hour24){
-    if (hour24 > 12) {
-        appisPM = true;
-        return hour24 - 12;
-    } else if (hour24 == 0) { //Midnight
-        appisPM = false;
-        return 12;
-    }
-    return hour24;
+int hr12to24(int hour24) {
+  if (hour24 > 12) {
+    appisPM = true;
+    return hour24 - 12;
+  } else if (hour24 == 0) { //Midnight
+    appisPM = false;
+    return 12;
+  }
+  return hour24;
 }
 
-void secTicker (int sec){
+void secTicker (int sec) {
   //This Draws a line across the screen that builds with each second, it also had blocks at each end for better effect. This is designed for two panels in horizontal arrangment
   //Draw a the boxes
-    dmd.drawFilledBox(0,6,1,8);
-    dmd.drawFilledBox(62,6,63,8);
-  // Psudo: Erase the line if sec = 0 ELSE the line length should equal sec +1  
-    if (sec == 0){dmd.drawLine(2,7,62,7,GRAPHICS_OFF);}else{dmd.drawLine(0,7,(sec+1),7);}
-    //end of draw a line
+  dmd.drawFilledBox(0, 6, 1, 8);
+  dmd.drawFilledBox(62, 6, 63, 8);
+  // Psudo: Erase the line if sec = 0 ELSE the line length should equal sec +1
+  if (sec == 0) {
+    dmd.drawLine(2, 7, 62, 7, GRAPHICS_OFF);
+  } else {
+    dmd.drawLine(0, 7, (sec + 1), 7);
+  }
+  //end of draw a line
 }
 
-void gpsSatsSignal(int seconds,int green) {
- if(seconds % 15 == 0 || green == 0){ 
- //Print Sats
- Serial.print("Satellites: "); Serial.println(gps.satellites());  
- dmd.drawFilledBox(61,15,63,13, GRAPHICS_OFF);
-if (green <= 3) {
-  //Display an X
-  dmd.setPixel(61,15, GRAPHICS_ON);
-  dmd.setPixel(62,14, GRAPHICS_ON);
-  dmd.setPixel(63,13, GRAPHICS_ON);
-  dmd.setPixel(61,13, GRAPHICS_ON);
-  dmd.setPixel(63,15, GRAPHICS_ON);
-}
-if (green > 3){
-  //Display 1 Short bar
-  dmd.setPixel(61,15, GRAPHICS_ON);
-}
-if (green > 4){
-  //Display 1 Short bar && 1 Medium bar
-  dmd.setPixel(62,15, GRAPHICS_ON);
-  dmd.setPixel(62,14, GRAPHICS_ON);
-}
-if (green > 5){
-  //Display 1 Short bar && 1 Medium bar && 1 Tall Bar
-  dmd.setPixel(63,15, GRAPHICS_ON);
-  dmd.setPixel(63,14, GRAPHICS_ON);
-  dmd.setPixel(63,13, GRAPHICS_ON);
-  
-}
-}
+void gpsSatsSignal(int seconds, int green) {
+  if (seconds % 15 == 0 || green == 0) {
+    //Print Sats
+    Serial.print("Satellites: "); Serial.println(gps.satellites());
+    dmd.drawFilledBox(61, 15, 63, 13, GRAPHICS_OFF);
+    if (green <= 3) {
+      //Display an X
+      dmd.setPixel(61, 15, GRAPHICS_ON);
+      dmd.setPixel(62, 14, GRAPHICS_ON);
+      dmd.setPixel(63, 13, GRAPHICS_ON);
+      dmd.setPixel(61, 13, GRAPHICS_ON);
+      dmd.setPixel(63, 15, GRAPHICS_ON);
+    }
+    if (green > 3) {
+      //Display 1 Short bar
+      dmd.setPixel(61, 15, GRAPHICS_ON);
+    }
+    if (green > 4) {
+      //Display 1 Short bar && 1 Medium bar
+      dmd.setPixel(62, 15, GRAPHICS_ON);
+      dmd.setPixel(62, 14, GRAPHICS_ON);
+    }
+    if (green > 5) {
+      //Display 1 Short bar && 1 Medium bar && 1 Tall Bar
+      dmd.setPixel(63, 15, GRAPHICS_ON);
+      dmd.setPixel(63, 14, GRAPHICS_ON);
+      dmd.setPixel(63, 13, GRAPHICS_ON);
+
+    }
+  }
 }
