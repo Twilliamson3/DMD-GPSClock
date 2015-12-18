@@ -125,10 +125,22 @@ void digitalClockDisplay(){
       int seconds =  second();
       if ( seconds < 10){Sec = "0" + String(seconds);}else{Sec = String(seconds);} 
       
-      int hrs =  hour();
-      if ( hrs < 12) { if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);}}     //This converts hrs to 12 hour time always 2 digits
-          else 
-          {hrs = hrs - 12; if( hrs < 10 ) {Hours = "0" + String(hrs);} else {Hours = String(hrs);} ;} 
+      if ( hrs < 12) { 
+              if( hrs < 10 ) {
+                  Hours = "0" + String(hrs);
+                } else {
+                  Hours = String(hrs);}
+              }     //This converts AM hrs to 12 hour time always 2 digits
+              
+      if (hrs == 12) {Hours = String(12);} // Its 12 Noon
+      
+      if (hrs > 12) {
+        hrs = hrs - 12; 
+              if( hrs < 10 ) {
+                  Hours = "0" + String(hrs);
+                }else{
+                  Hours = String(hrs);} 
+                    ;}
 
       String cTIME= Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time. 
       //Serial.println(cTIME);//Debug the Time String if not wotking 
@@ -154,14 +166,26 @@ void printDigits(int digits) {
   Serial.print(digits);
 }
 
+//Old Method, possibly buggy
+//int hr12to24 (int hour24){
+//  //Serial.print("hour24: ");Serial.println(hour24);
+//  if(hour24 > 12){
+//    hour24 = hour24 - 12;
+//    appisPM = true;
+//    } else {appisPM = false;}
+//    return hour24; 
+//}
 
-int hr12to24 (int hour24){
-  //Serial.print("hour24: ");Serial.println(hour24);
-  if(hour24 > 12){
-    hour24 = hour24 - 12;
-    appisPM = true;
-    } else {appisPM = false;}
-    return hour24; 
+//new Method, Needs Testing
+int hr12to24(int hour24){
+    if (hour24 > 12) {
+        appisPM = true;
+        return hour24 - 12;
+    } else if (hour24 == 0) { //Midnight
+        appisPM = false;
+        return 12;
+    }
+    return hour24;
 }
 
 void secTicker (int sec){
