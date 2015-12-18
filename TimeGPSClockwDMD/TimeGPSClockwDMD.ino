@@ -25,16 +25,12 @@ const int offset = -5;  // Eastern Standard Time (USA)
 
 time_t prevDisplay = 0; // when the digital clock was displayed
 boolean appisPM = false;
-boolean clockinsync = false; // Has SoftRTC been sync'd lately"?
-String Hours ;
-String Minutes ;
-String Sec ;
 String Col = ":";
 String AP;
 String Mo;
 String Date;
 String Yr;
-int seconds;
+
 
 //********DMDisplay *************//
 #include <SPI.h>        //SPI.h must be included as DMD is written by SPI (the IDE complains otherwise)
@@ -82,34 +78,25 @@ void loop()
         setTime(Hour, Minute, Second, Day, Month, Year);
         adjustTime(offset * SECS_PER_HOUR);
         Serial.println("Sync'd");
-        clockinsync = true;
-      }
+       }
 
     }
   }
 
-  //Output to the Serialport
+  
   if (timeStatus() != timeNotSet) {
     if (now() != prevDisplay) { //update the display only if the time has changed
       prevDisplay = now();
+      updateDMDprintableTime();
+      serialPrintTime();  
+      gpsSatsSignal(second(), gps.satellites()); // Display GPS Signal Bars
+      secTicker(second()); //Display Second Ticker
       digitalClockDisplay();
     }
   }
 }
 
 void digitalClockDisplay() {
-  // digital clock display of the time to the serial Port
-  Serial.print(hr12to24(hour()));
-  printDigits(minute());
-  printDigits(second());
-  if (appisPM == true) {
-    Serial.println(" PM");  //this Prints AM or PM to the Serial port and also Sets the String AP up for the Display
-    AP = "p";
-  } else {
-    Serial.println(" AM");
-    AP = "a";
-  }
-
   // Display Date to the serial port
   Serial.print(weekday()); //?Sunday=1?
   Serial.print("   ");
@@ -119,93 +106,58 @@ void digitalClockDisplay() {
   Serial.print("/");
   Serial.print(year());
   Serial.println();
-
-
-
-
-
-  //Setup to Read Time, Convert to local int, process int into time (1 should print 01) (13 hours should print 12 hours)
-  int min =  minute();
-  if ( min < 10) {
-    Minutes = "0" + String(min);
-  } else {
-    Minutes = String(min);
-  }
-
-  int seconds =  second();
-  if ( seconds < 10) {
-    Sec = "0" + String(seconds);
-  } else {
-    Sec = String(seconds);
-  }
-
-  int hrs = hours();
-  if ( hrs < 12) {
-    if ( hrs < 10 ) {
-      Hours = "0" + String(hrs);
-    } else {
-      Hours = String(hrs);
-    }
-  }     //This converts AM hrs to 12 hour time always 2 digits
-
-  if (hrs == 12) {
-    Hours = String(12); // Its 12 Noon
-  }
-
-  if (hrs > 12) {
-    hrs = hrs - 12;
-    if ( hrs < 10 ) {
-      Hours = "0" + String(hrs);
-    } else {
-      Hours = String(hrs);
-    }
-    ;
-  }
-
-  String cTIME = Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time.
-  //Serial.println(cTIME);//Debug the Time String if not wotking
-  gpsSatsSignal(seconds, gps.satellites()); // Display GPS Signal Bars
-  dmd.drawString(6, 0, cTIME); // Display the Time on the LED Panel
-  secTicker(seconds); //Display Second Ticker
-
-  Serial.print(" ");
-  Serial.print(day());
-  Serial.print(" ");
-  Serial.print(month());
-  Serial.print(" ");
-  Serial.print(year());
-  Serial.println();
-
 }
 
-void printDigits(int digits) {
-  // utility function for digital clock display: prints preceding colon and leading 0
-  Serial.print(":");
-  if (digits < 10)
-    Serial.print('0');
-  Serial.print(digits);
+
+void updateDMDprintableTime() {
+  //String cTIME = Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time.
+  dmd.drawString(6, 0, (timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP)); // Display the Time on the LED Panel  
 }
 
-//Old Method, possibly buggy
-//int hr12to24 (int hour24){
-//  //Serial.print("hour24: ");Serial.println(hour24);
-//  if(hour24 > 12){
-//    hour24 = hour24 - 12;
-//    appisPM = true;
-//    } else {appisPM = false;}
-//    return hour24;
-//}
+void serialPrintTime() {
+ 
+  Serial.println(timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP); // The String that holds the time.
+  
+}
 
-//new Method, Needs Testing
-int hr12to24(int hour24) {
+
+//----Function----
+//Pass in 24 hour (hour) and the global appisPM flag and AP String is 
+//adjusted and the hour converted into 12 hour format is returned.
+
+int hr24to12(int hour24) {
   if (hour24 > 12) {
+    hour24 = hour24 - 12;
     appisPM = true;
-    return hour24 - 12;
-  } else if (hour24 == 0) { //Midnight
-    appisPM = false;
+    AP = "p";
+    return hour24;
+  }
+  if (hour24 == 12) {
+    appisPM = true;
+    AP = "p";
     return 12;
   }
-  return hour24;
+  if (hour24 == 0) {
+    appisPM = false;
+     AP = "a";
+    return 12;
+  }
+  if (hour24 < 12) {
+    appisPM = false;
+     AP = "a";
+    return hour24;
+  }
+}
+
+//----Function----
+//timeTOtwodigits
+//Pass in a int value and it is converted to a propper String with 2 digits
+String timeTOtwodigits (int timeValue) {
+  if (timeValue <= 9) {
+    return "0" + String(timeValue) ;
+  } else {
+    return String(timeValue);
+  }
 }
 
 void secTicker (int sec) {
