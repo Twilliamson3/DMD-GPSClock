@@ -34,6 +34,7 @@ String AP;
 String Mo;
 String Date;
 String Yr;
+int seconds;
 
 //********DMDisplay *************//
 #include <SPI.h>        //SPI.h must be included as DMD is written by SPI (the IDE complains otherwise)
@@ -64,6 +65,7 @@ void setup()
   SerialGPS.begin(9600);
   Serial.println("Waiting for GPS time ... ");
   dmd.drawString(8,0,"GPS Lost");
+
 }
 
 void loop()
@@ -103,18 +105,21 @@ void digitalClockDisplay(){
     if(appisPM == true){Serial.println(" PM"); AP = "p";}else{Serial.println(" AM");AP = "a";} //this Prints AM or PM to the Serial port and also Sets the String AP up for the Display
 
   // Display Date to the serial port
-      Serial.print(" ");
-      Serial.print(day());
-      Serial.print(" ");
+      Serial.print(weekday()); //?Sunday=1?
+      Serial.print("   ");
       Serial.print(month());
-      Serial.print(" ");
+      Serial.print("/");
+      Serial.print(day());      
+      Serial.print("/");
       Serial.print(year()); 
-      Serial.println();     
-  //Print Sats
-    
+      Serial.println(); 
+      
+        
+      
+  
     
   //Setup to Read Time, Convert to local int, process int into time (1 should print 01) (13 hours should print 12 hours)  
-       int min =  minute();
+      int min =  minute();
       if ( min < 10){Minutes = "0" + String(min);}else{Minutes = String(min);}    
       
       int seconds =  second();
@@ -127,10 +132,9 @@ void digitalClockDisplay(){
 
       String cTIME= Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time. 
       //Serial.println(cTIME);//Debug the Time String if not wotking 
-      
+      gpsSatsSignal(seconds,gps.satellites());// Display GPS Signal Bars
       dmd.drawString(6,0,cTIME); // Display the Time on the LED Panel
-      
-      secTicker(seconds);
+      secTicker(seconds); //Display Second Ticker
 
   Serial.print(" ");
   Serial.print(day());
@@ -139,6 +143,7 @@ void digitalClockDisplay(){
   Serial.print(" ");
   Serial.print(year()); 
   Serial.println(); 
+  
 }
 
 void printDigits(int digits) {
@@ -169,4 +174,34 @@ void secTicker (int sec){
     //end of draw a line
 }
 
-
+void gpsSatsSignal(int seconds,int green) {
+ if(seconds % 15 == 0 || green == 0){ 
+ //Print Sats
+ Serial.print("Satellites: "); Serial.println(gps.satellites());  
+ dmd.drawFilledBox(61,15,63,13, GRAPHICS_OFF);
+if (green <= 3) {
+  //Display an X
+  dmd.setPixel(61,15, GRAPHICS_ON);
+  dmd.setPixel(62,14, GRAPHICS_ON);
+  dmd.setPixel(63,13, GRAPHICS_ON);
+  dmd.setPixel(61,13, GRAPHICS_ON);
+  dmd.setPixel(63,15, GRAPHICS_ON);
+}
+if (green > 3){
+  //Display 1 Short bar
+  dmd.setPixel(61,15, GRAPHICS_ON);
+}
+if (green > 4){
+  //Display 1 Short bar && 1 Medium bar
+  dmd.setPixel(62,15, GRAPHICS_ON);
+  dmd.setPixel(62,14, GRAPHICS_ON);
+}
+if (green > 5){
+  //Display 1 Short bar && 1 Medium bar && 1 Tall Bar
+  dmd.setPixel(63,15, GRAPHICS_ON);
+  dmd.setPixel(63,14, GRAPHICS_ON);
+  dmd.setPixel(63,13, GRAPHICS_ON);
+  
+}
+}
+}
