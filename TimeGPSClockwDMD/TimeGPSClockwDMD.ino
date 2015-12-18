@@ -78,17 +78,17 @@ void loop()
         setTime(Hour, Minute, Second, Day, Month, Year);
         adjustTime(offset * SECS_PER_HOUR);
         Serial.println("Sync'd");
-       }
+      }
 
     }
   }
 
-  
+
   if (timeStatus() != timeNotSet) {
     if (now() != prevDisplay) { //update the display only if the time has changed
       prevDisplay = now();
       updateDMDprintableTime();
-      serialPrintTime();  
+      serialPrintTime();
       gpsSatsSignal(second(), gps.satellites()); // Display GPS Signal Bars
       secTicker(second()); //Display Second Ticker
       digitalClockDisplay();
@@ -111,18 +111,18 @@ void digitalClockDisplay() {
 
 void updateDMDprintableTime() {
   //String cTIME = Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time.
-  dmd.drawString(6, 0, (timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP)); // Display the Time on the LED Panel  
+  dmd.drawString(6, 0, (timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP)); // Display the Time on the LED Panel
 }
 
 void serialPrintTime() {
- 
+
   Serial.println(timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP); // The String that holds the time.
-  
+
 }
 
 
 //----Function----
-//Pass in 24 hour (hour) and the global appisPM flag and AP String is 
+//Pass in 24 hour (hour) and the global appisPM flag and AP String is
 //adjusted and the hour converted into 12 hour format is returned.
 
 int hr24to12(int hour24) {
@@ -139,12 +139,12 @@ int hr24to12(int hour24) {
   }
   if (hour24 == 0) {
     appisPM = false;
-     AP = "a";
+    AP = "a";
     return 12;
   }
   if (hour24 < 12) {
     appisPM = false;
-     AP = "a";
+    AP = "a";
     return hour24;
   }
 }
