@@ -50,7 +50,7 @@ SoftDMD dmd(2, 1); // DMD controls the entire display
 void setup()
 {
   Serial.begin(115200);
-  dmd.setBrightness(30);
+  dmd.setBrightness(50);
   //dmd.selectFont(Arial_Black_16);
   //dmd.selectFont(Arial14);
   //dmd.selectFont(Droid_Sans_16);
@@ -61,6 +61,8 @@ void setup()
   SerialGPS.begin(9600);
   Serial.println("Waiting for GPS time ... ");
   dmd.drawString(8, 0, "GPS Lost");
+  Serial.println("Ver. 0.5");
+  
 
 }
 
@@ -77,7 +79,7 @@ void loop()
         // set the Time to the latest GPS reading
         setTime(Hour, Minute, Second, Day, Month, Year);
         adjustTime(offset * SECS_PER_HOUR);
-        Serial.println("Sync'd");
+        //Serial.println("Sync'd");
       }
 
     }
@@ -88,17 +90,18 @@ void loop()
     if (now() != prevDisplay) { //update the display only if the time has changed
       prevDisplay = now();
       updateDMDprintableTime();
-      serialPrintTime();
+      updateDMDprintableDate();
+      //serialPrintTime();
       gpsSatsSignal(second(), gps.satellites()); // Display GPS Signal Bars
-      secTicker(second()); //Display Second Ticker
-      digitalClockDisplay();
+      //      secTicker(second()); //Display Second Ticker
+      //digitalClockDisplay();
     }
   }
 }
 
 void digitalClockDisplay() {
   // Display Date to the serial port
-  Serial.print(weekday()); //?Sunday=1?
+  Serial.print(DoW(weekday())); //?Sunday=1?
   Serial.print("   ");
   Serial.print(month());
   Serial.print("/");
@@ -113,7 +116,10 @@ void updateDMDprintableTime() {
   //String cTIME = Hours + Col + Minutes + Col + Sec + AP; // The String that holds the time.
   dmd.drawString(6, 0, (timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP)); // Display the Time on the LED Panel
 }
-
+void updateDMDprintableDate() {
+  
+  dmd.drawString(5, 9, (DoW(weekday()) + " " + month() + "-" + day())); // Display the Time on the LED Panel
+}
 void serialPrintTime() {
 
   Serial.println(timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP); // The String that holds the time.
@@ -159,6 +165,34 @@ String timeTOtwodigits (int timeValue) {
     return String(timeValue);
   }
 }
+//----Function----
+//Return Day of week from int
+//Sunday 0 //saturday 7
+String DoW (int dayofweek) {
+  switch (dayofweek) {
+    case 1:
+      return "Sun";
+      break;
+    case 2:
+      return "Mon";
+      break;
+    case 3:
+      return "Tue";
+      break;
+    case 4:
+      return "Wed";
+      break;
+    case 5:
+      return "Thu";
+      break;
+    case 6:
+      return "Fri";
+      break;
+    case 7:
+      return "Sat";
+      break;
+  }
+}
 
 void secTicker (int sec) {
   //This Draws a line across the screen that builds with each second, it also had blocks at each end for better effect. This is designed for two panels in horizontal arrangment
@@ -177,7 +211,7 @@ void secTicker (int sec) {
 void gpsSatsSignal(int seconds, int green) {
   if (seconds % 15 == 0 || green == 0) {
     //Print Sats
-    Serial.print("Satellites: "); Serial.println(gps.satellites());
+    //Serial.print("Satellites: "); Serial.println(gps.satellites());
     dmd.drawFilledBox(61, 15, 63, 13, GRAPHICS_OFF);
     if (green <= 3) {
       //Display an X
