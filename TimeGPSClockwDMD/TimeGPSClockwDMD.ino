@@ -62,7 +62,7 @@ void setup()
   Serial.println("Waiting for GPS time ... ");
   dmd.drawString(8, 0, "GPS Lost");
   Serial.println("Ver. 0.5");
-  
+
 
 }
 
@@ -95,6 +95,7 @@ void loop()
       gpsSatsSignal(second(), gps.satellites()); // Display GPS Signal Bars
       //      secTicker(second()); //Display Second Ticker
       //digitalClockDisplay();
+      readLight();
     }
   }
 }
@@ -117,7 +118,7 @@ void updateDMDprintableTime() {
   dmd.drawString(6, 0, (timeTOtwodigits(hr24to12(hour())) + Col + timeTOtwodigits(minute()) + Col + timeTOtwodigits(second()) + AP)); // Display the Time on the LED Panel
 }
 void updateDMDprintableDate() {
-  
+
   dmd.drawString(5, 9, (DoW(weekday()) + " " + month() + "-" + day())); // Display the Time on the LED Panel
 }
 void serialPrintTime() {
@@ -208,6 +209,20 @@ void secTicker (int sec) {
   //end of draw a line
 }
 
+void readLight() {
+  Serial.print("A15: ");
+  Serial.println(analogRead(A15));
+  dmd.setPixel(0, 14, GRAPHICS_OFF);
+  dmd.setPixel(0, 15, GRAPHICS_OFF);
+  if (analogRead(A15) > 600) {
+    dmd.setBrightness(50);
+    dmd.setPixel(0, 14, GRAPHICS_ON);
+    dmd.setPixel(0, 15, GRAPHICS_ON);
+  } else {
+    dmd.setBrightness(30);
+  }
+  dmd.setPixel(0, 15, GRAPHICS_ON);
+}
 void gpsSatsSignal(int seconds, int green) {
   if (seconds % 15 == 0 || green == 0) {
     //Print Sats
