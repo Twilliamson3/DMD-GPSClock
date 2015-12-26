@@ -30,11 +30,13 @@ String AP;
 String Mo;
 String Date;
 String Yr;
+int secondRowCounter = 0;
 
 
 //********DMDisplay *************//
 #include <SPI.h>        //SPI.h must be included as DMD is written by SPI (the IDE complains otherwise)
-#include <DMD2.h>        //https://github.com/freetronics/DMD
+#include <DMD2.h>        //https://github.com/freetronics/DMD2
+// Also need DMD Version 1 for the SystemFont5x7 https://github.com/freetronics/DMD2
 #include "SystemFont5x7.h"
 #include "Arial_black_16.h"
 #include <fonts/Arial14.h>
@@ -46,6 +48,8 @@ String Yr;
 #define DISPLAYS_DOWN 1
 SoftDMD dmd(2, 1); // DMD controls the entire display
 //******END CONFIGS*****//
+
+
 
 void setup()
 {
@@ -90,10 +94,10 @@ void loop()
     if (now() != prevDisplay) { //update the display only if the time has changed
       prevDisplay = now();
       updateDMDprintableTime();
-      updateDMDprintableDate();
+      updateDMDSecondline(second());
       //serialPrintTime();
       gpsSatsSignal(second(), gps.satellites()); // Display GPS Signal Bars
-      //      secTicker(second()); //Display Second Ticker
+      //secTicker(second()); //Display Second Ticker
       //digitalClockDisplay();
       readLight();
     }
@@ -120,6 +124,27 @@ void updateDMDprintableTime() {
 void updateDMDprintableDate() {
 
   dmd.drawString(5, 9, (DoW(weekday()) + " " + month() + "-" + day())); // Display the Time on the LED Panel
+}
+void updateDMDSecondline(int seconds){
+if (seconds % 15 == 0) {secondRowCounter++;}
+if (secondRowCounter ==2) {secondRowCounter = 1;}
+Serial.print("SecondRowCounter: "); Serial.println(secondRowCounter);
+switch (secondRowCounter) {
+  case 1:
+  dmd.drawLine(0, 9, 63, 15, GRAPHICS_OFF); // This should erase the second line
+  updateDMDprintableDate();
+  break;
+  case 2:
+  break;
+  case 3:
+  dmd.drawLine(0, 9, 63, 15, GRAPHICS_OFF); // This should erase the second line
+   // Now we need to print the current A/D reading for debugging. 
+  dmd.drawString(0, 9,"A/D:");
+  dmd.drawString(19,8,String(analogRead(A15)));
+  break;
+  }
+
+
 }
 void serialPrintTime() {
 
