@@ -30,7 +30,7 @@ String AP;
 String Mo;
 String Date;
 String Yr;
-int secondRowCounter = 0;
+int secondRowCounter = 1;
 
 
 //********DMDisplay *************//
@@ -65,7 +65,7 @@ void setup()
   SerialGPS.begin(9600);
   Serial.println("Waiting for GPS time ... ");
   dmd.drawString(8, 0, "GPS Lost");
-  Serial.println("Ver. 0.5");
+  Serial.println("Ver. 0.6");
 
 
 }
@@ -125,25 +125,30 @@ void updateDMDprintableDate() {
 
   dmd.drawString(5, 9, (DoW(weekday()) + " " + month() + "-" + day())); // Display the Time on the LED Panel
 }
-void updateDMDSecondline(int seconds){
-if (seconds % 15 == 0) {secondRowCounter++;}
-if (secondRowCounter ==2) {secondRowCounter = 1;}
-Serial.print("SecondRowCounter: "); Serial.println(secondRowCounter);
-switch (secondRowCounter) {
-  case 1:
-  dmd.drawLine(0, 9, 63, 15, GRAPHICS_OFF); // This should erase the second line
-  updateDMDprintableDate();
-  break;
-  case 2:
-  break;
-  case 3:
-  dmd.drawLine(0, 9, 63, 15, GRAPHICS_OFF); // This should erase the second line
-   // Now we need to print the current A/D reading for debugging. 
-  dmd.drawString(0, 9,"A/D:");
-  dmd.drawString(19,8,String(analogRead(A15)));
-  break;
+void updateDMDSecondline(int seconds) {
+  if (seconds % 15 == 0 || secondRowCounter == 1) {
+    
+    if (secondRowCounter >= 4) {
+      secondRowCounter = 1;
+    }
+    Serial.print("SecondRowCounter: "); Serial.println(secondRowCounter);
+    switch (secondRowCounter) {
+      case 1:
+        dmd.drawFilledBox(0, 7, 63, 15, GRAPHICS_OFF); // This should erase the second line
+        updateDMDprintableDate();
+        break;
+      case 2:
+        dmd.drawFilledBox(0, 7, 63, 15, GRAPHICS_OFF); // This should erase the second line
+        break;
+      case 3:
+        dmd.drawFilledBox(0, 7, 63, 15, GRAPHICS_OFF); // This should erase the second line
+        // Now we need to print the current A/D reading for debugging.
+        dmd.drawString(0, 9, "A/D:");
+        dmd.drawString(19, 9, String(analogRead(A15)));
+        break;
+    }
+    secondRowCounter = secondRowCounter + 1;
   }
-
 
 }
 void serialPrintTime() {
